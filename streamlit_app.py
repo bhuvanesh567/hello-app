@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,7 +7,13 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
-import speech_recognition as sr
+
+# Try to import speech recognition safely
+try:
+    import speech_recognition as sr
+    speech_available = True
+except ImportError:
+    speech_available = False
 
 # Download NLTK resources
 nltk.download("stopwords")
@@ -34,7 +41,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Preprocessing without punkt
+# Preprocessing
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)
@@ -100,22 +107,26 @@ if user_text:
     st.write(f"**Processed:** {processed}")
     st.write(f"**Score:** {score}")
 
-# Speech input
-st.header("🎤 Real-time Speech Sentiment")
-if st.button("🎙️ Start Recording"):
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.info("Speak now...")
-        audio = recognizer.listen(source)
+# Speech input (only if available)
+if speech_available and os.environ.get("STREAMLIT_SERVER_HEADLESS") != "1":
+    st.header("🎤 Real-time Speech Sentiment")
+    if st.button("🎙️ Start Recording"):
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.info("Speak now...")
+            audio = recognizer.listen(source)
 
-        try:
-            text = recognizer.recognize_google(audio)
-            st.write(f"**You said:** {text}")
-            processed, score, label = analyze_sentiment(text)
-            st.success(f"**Sentiment:** {label}")
-            st.write(f"**Processed:** {processed}")
-            st.write(f"**Score:** {score}")
-        except sr.UnknownValueError:
-            st.error("Speech not understood.")
-        except sr.RequestError as e:
-            st.error(f"Speech service error: {e}")
+            try:
+                text = recognizer.recognize_google(audio)
+                st.write(f"**You said:** {text}")
+                processed, score, label = analyze_sentiment(text)
+                st.success(f"**Sentiment:** {label}")
+                st.write(f"**Processed:** {processed}")
+                st.write(f"**Score:** {score}")
+            except sr.UnknownValueError:
+                st.error("Speech not understood.")
+            except sr.RequestError as e:
+                st.error(f"Speech service error: {e}")
+else:
+    st.info("🎤 Speech sentiment is only available when running locally.")
+
