@@ -1,3 +1,4 @@
+# ====== Imports ======
 import os
 import streamlit as st
 import pandas as pd
@@ -7,20 +8,28 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
-import speech_recognition as sr
 
+# Try importing speech recognition
+try:
+    import speech_recognition as sr
+    speech_available = True
+except ImportError:
+    speech_available = False
 
-# Download NLTK resources
+# ====== Download NLTK resources ======
 nltk.download("stopwords")
 nltk.download("wordnet")
 nltk.download("vader_lexicon")
 
-# Initialize NLP tools
+# ====== Initialize NLP tools ======
 lemmatizer = WordNetLemmatizer()
 sia = SentimentIntensityAnalyzer()
 stop_words = set(stopwords.words("english"))
 
-# Mobile-friendly styling
+# ====== Check if running on Streamlit Cloud ======
+running_in_streamlit_cloud = "STREAMLIT_SERVER_HEADLESS" in os.environ or os.getenv('STREAMLIT_SERVER_HEADLESS') == "1"
+
+# ====== Mobile-friendly styling ======
 st.markdown("""
     <style>
     .block-container {
@@ -36,7 +45,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Preprocessing without punkt
+# ====== Helper Functions ======
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)
@@ -49,6 +58,8 @@ def analyze_sentiment(text):
     score = sia.polarity_scores(processed_text)["compound"]
     label = "Positive" if score > 0 else "Negative" if score < 0 else "Neutral"
     return processed_text, score, label
+
+# ====== App ======
 
 # App title
 st.title("📱 Sentiment Analysis App (Text | CSV | Speech)")
@@ -102,10 +113,7 @@ if user_text:
     st.write(f"**Processed:** {processed}")
     st.write(f"**Score:** {score}")
 
-# Detect if running on Streamlit Cloud
-running_in_streamlit_cloud = "STREAMLIT_SERVER_HEADLESS" in os.environ or os.getenv('STREAMLIT_SERVER_HEADLESS') == "1"
-
-# Speech input (only if available and running locally)
+# Speech input (only if running locally)
 if speech_available and not running_in_streamlit_cloud:
     st.header("🎤 Real-time Speech Sentiment")
     if st.button("🎙️ Start Recording"):
@@ -127,3 +135,4 @@ if speech_available and not running_in_streamlit_cloud:
                 st.error(f"Speech service error: {e}")
 else:
     st.info("🎤 Speech sentiment is only available when running locally.")
+
