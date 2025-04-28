@@ -114,31 +114,32 @@ if user_text:
     st.write(f"**Score:** {score}")
 
 # Speech input (only if running locally)
+
 # Speech input (only if speech recognition is available)
-if speech_available:
+running_in_streamlit_cloud = "STREMLIT_SERVER_HEADLESS" in os.environ or os.getenv('STREAMLIT_SERVER_HEADLESS') == "1"
+
+# Speech input (only available locally)
+if not running_in_streamlit_cloud:
     st.header("🎤 Real-time Speech Sentiment")
     
-    if running_in_streamlit_cloud:
-        st.warning("🎙️ Speech recording is disabled on Streamlit Cloud.")
-    else:
-        if st.button("🎙️ Start Recording"):
-            recognizer = sr.Recognizer()
+    if st.button("🎙️ Start Recording"):
+        recognizer = sr.Recognizer()
+        try:
             with sr.Microphone() as source:
                 st.info("Speak now...")
                 audio = recognizer.listen(source)
+            
+            text = recognizer.recognize_google(audio)
+            st.write(f"**You said:** {text}")
+            processed, score, label = analyze_sentiment(text)
+            st.success(f"**Sentiment:** {label}")
+            st.write(f"**Processed:** {processed}")
+            st.write(f"**Score:** {score}")
 
-            try:
-                text = recognizer.recognize_google(audio)
-                st.write(f"**You said:** {text}")
-                processed, score, label = analyze_sentiment(text)
-                st.success(f"**Sentiment:** {label}")
-                st.write(f"**Processed:** {processed}")
-                st.write(f"**Score:** {score}")
-            except sr.UnknownValueError:
-                st.error("Speech not understood.")
-            except sr.RequestError as e:
-                st.error(f"Speech service error: {e}") 
-
+        except sr.UnknownValueError:
+            st.error("Speech not understood.")
+        except sr.RequestError as e:
+            st.error(f"Speech service error: {e}")
 else:
-    st.info("🎤 Speech sentiment is only available when running locally.")
-
+    st.header("🎤 Real-time Speech Sentiment")
+    st.warning("⚠️ Speech recording is disabled on Streamlit Cloud. Only available when running locally.")
