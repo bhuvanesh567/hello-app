@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,13 +6,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
-
-# Try to import speech recognition safely
-try:
-    import speech_recognition as sr
-    speech_available = True
-except ImportError:
-    speech_available = False
+import speech_recognition as sr
 
 # Download NLTK resources
 nltk.download("stopwords")
@@ -41,7 +34,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Preprocessing
+# Preprocessing without punkt
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^\w\s]', '', text)
@@ -107,8 +100,11 @@ if user_text:
     st.write(f"**Processed:** {processed}")
     st.write(f"**Score:** {score}")
 
-# Speech input (only if available)
-if speech_available and os.environ.get("STREAMLIT_SERVER_HEADLESS") != "1":
+# Detect if running on Streamlit Cloud
+running_in_streamlit_cloud = "STREMLIT_SERVER_HEADLESS" in os.environ or os.getenv('STREAMLIT_SERVER_HEADLESS') == "1"
+
+# Speech input (only if available and running locally)
+if speech_available and not running_in_streamlit_cloud:
     st.header("🎤 Real-time Speech Sentiment")
     if st.button("🎙️ Start Recording"):
         recognizer = sr.Recognizer()
@@ -129,4 +125,3 @@ if speech_available and os.environ.get("STREAMLIT_SERVER_HEADLESS") != "1":
                 st.error(f"Speech service error: {e}")
 else:
     st.info("🎤 Speech sentiment is only available when running locally.")
-
