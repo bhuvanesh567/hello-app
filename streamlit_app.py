@@ -114,8 +114,10 @@ if user_text:
     st.write(f"**Score:** {score}")
 
 # Speech input (only if running locally)
- if speech_available:
+# Speech input (only if speech recognition is available)
+if speech_available:
     st.header("🎤 Real-time Speech Sentiment")
+    
     if running_in_streamlit_cloud:
         st.warning("🎙️ Speech recording is disabled on Streamlit Cloud.")
     else:
@@ -124,17 +126,18 @@ if user_text:
             with sr.Microphone() as source:
                 st.info("Speak now...")
                 audio = recognizer.listen(source)
-                try:
-                    text = recognizer.recognize_google(audio)
-                    st.write(f"**You said:** {text}")
-                    processed, score, label = analyze_sentiment(text)
-                    st.success(f"**Sentiment:** {label}")
-                    st.write(f"**Processed:** {processed}")
-                    st.write(f"**Score:** {score}")
-                except sr.UnknownValueError:
-                    st.error("Speech not understood.")
-                except sr.RequestError as e:
-                    st.error(f"Speech service error: {e}")
+
+            try:
+                text = recognizer.recognize_google(audio)
+                st.write(f"**You said:** {text}")
+                processed, score, label = analyze_sentiment(text)
+                st.success(f"**Sentiment:** {label}")
+                st.write(f"**Processed:** {processed}")
+                st.write(f"**Score:** {score}")
+            except sr.UnknownValueError:
+                st.error("Speech not understood.")
+            except sr.RequestError as e:
+                st.error(f"Speech service error: {e}") 
 
 else:
     st.info("🎤 Speech sentiment is only available when running locally.")
