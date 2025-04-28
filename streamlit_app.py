@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,6 +8,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
 import speech_recognition as sr
+
 
 # Download NLTK resources
 nltk.download("stopwords")
@@ -101,7 +103,7 @@ if user_text:
     st.write(f"**Score:** {score}")
 
 # Detect if running on Streamlit Cloud
-running_in_streamlit_cloud = "STREMLIT_SERVER_HEADLESS" in os.environ or os.getenv('STREAMLIT_SERVER_HEADLESS') == "1"
+running_in_streamlit_cloud = "STREAMLIT_SERVER_HEADLESS" in os.environ or os.getenv('STREAMLIT_SERVER_HEADLESS') == "1"
 
 # Speech input (only if available and running locally)
 if speech_available and not running_in_streamlit_cloud:
